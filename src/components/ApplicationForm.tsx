@@ -98,9 +98,9 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5">
           {/* Core */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company *">
               <input required value={form.company} onChange={e => set('company', e.target.value)}
                 className="input" placeholder="e.g. Google" />
@@ -111,7 +111,7 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
             </Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Status">
               <select value={form.status} onChange={e => set('status', e.target.value as ApplicationStatus)} className="input">
                 {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
@@ -138,7 +138,7 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
           </Field>
 
           {/* Job details */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Job URL">
               <input type="url" value={form.jobUrl} onChange={e => set('jobUrl', e.target.value)}
                 className="input" placeholder="https://..." />
@@ -152,7 +152,7 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
             </Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Location">
               <input value={form.location} onChange={e => set('location', e.target.value)}
                 className="input" placeholder="e.g. New York, NY" />
@@ -162,20 +162,18 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
                 {(['Remote', 'Hybrid', 'Onsite'] as LocationType[]).map(l => <option key={l}>{l}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-2 col-span-1">
-              <Field label="Salary Min">
-                <input value={form.salaryMin} onChange={e => set('salaryMin', e.target.value)}
-                  className="input" placeholder="$80k" />
-              </Field>
-              <Field label="Salary Max">
-                <input value={form.salaryMax} onChange={e => set('salaryMax', e.target.value)}
-                  className="input" placeholder="$120k" />
-              </Field>
-            </div>
+            <Field label="Salary Min">
+              <input value={form.salaryMin} onChange={e => set('salaryMin', e.target.value)}
+                className="input" placeholder="$80k" />
+            </Field>
+            <Field label="Salary Max">
+              <input value={form.salaryMax} onChange={e => set('salaryMax', e.target.value)}
+                className="input" placeholder="$120k" />
+            </Field>
           </div>
 
           {/* Recruiter */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Recruiter Name">
               <input value={form.recruiterName} onChange={e => set('recruiterName', e.target.value)}
                 className="input" placeholder="Jane Doe" />
@@ -197,7 +195,7 @@ export function ApplicationForm({ initial, onSave, onClose }: Props) {
             </div>
             <div className="space-y-2">
               {form.interviewRounds.map(round => (
-                <div key={round.id} className="bg-gray-50 rounded-lg p-3 grid grid-cols-3 gap-2 items-start">
+                <div key={round.id} className="bg-gray-50 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-start">
                   <input value={round.type} onChange={e => updateRound(round.id, 'type', e.target.value)}
                     className="input text-sm" placeholder="Type (e.g. Phone Screen)" />
                   <input type="date" value={round.date} onChange={e => updateRound(round.id, 'date', e.target.value)}

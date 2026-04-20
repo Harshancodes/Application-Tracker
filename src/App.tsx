@@ -95,9 +95,9 @@ function AuthenticatedApp({
 
               <button
                 onClick={() => { setEditingApp(null); setShowForm(true) }}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 rounded-lg transition-all shadow-md shadow-indigo-500/30">
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 rounded-lg transition-all shadow-md shadow-indigo-500/30">
                 <Plus className="w-4 h-4" />
-                <span>Add Job</span>
+                <span className="hidden sm:inline">Add Job</span>
               </button>
 
               <div className="relative ml-1">
@@ -216,7 +216,7 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+      className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px ${
         active
           ? 'border-indigo-600 text-indigo-600'
           : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'

@@ -30,10 +30,10 @@ export function TableView({ applications, sortField, sortDir, onSort, onEdit, on
               <SortHeader label="Role" field="role" current={sortField} dir={sortDir} onSort={onSort} />
               <SortHeader label="Status" field="status" current={sortField} dir={sortDir} onSort={onSort} />
               <SortHeader label="Score" field="likelihood" current={sortField} dir={sortDir} onSort={onSort} />
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
-              <SortHeader label="Applied" field="appliedDate" current={sortField} dir={sortDir} onSort={onSort} />
-              <SortHeader label="Updated" field="lastUpdated" current={sortField} dir={sortDir} onSort={onSort} />
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Salary</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
+              <SortHeader label="Applied" field="appliedDate" current={sortField} dir={sortDir} onSort={onSort} className="hidden sm:table-cell" />
+              <SortHeader label="Updated" field="lastUpdated" current={sortField} dir={sortDir} onSort={onSort} className="hidden lg:table-cell" />
+              <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Salary</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -51,25 +51,25 @@ export function TableView({ applications, sortField, sortDir, onSort, onEdit, on
                     )}
                   </div>
                   {app.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="hidden sm:flex flex-wrap gap-1 mt-1">
                       {app.tags.map(tag => (
                         <span key={tag} className="px-1.5 py-0 bg-gray-100 text-gray-500 rounded text-xs">{tag}</span>
                       ))}
                     </div>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-700">{app.role}</td>
+                <td className="px-4 py-3 text-gray-700 max-w-[120px] truncate">{app.role}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(app.status)}`}>
                     {app.status}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className={`text-sm font-bold px-2 py-0.5 rounded-md ${getLikelihoodColor(app.likelihood)}`}>
                       {app.likelihood}
                     </span>
-                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                    <div className="hidden sm:block w-16 bg-gray-200 rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full ${getLikelihoodBarColor(app.likelihood)}`}
                         style={{ width: `${app.likelihood * 10}%` }}
@@ -77,19 +77,19 @@ export function TableView({ applications, sortField, sortDir, onSort, onEdit, on
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-500">
+                <td className="hidden md:table-cell px-4 py-3 text-gray-500">
                   <div className="text-xs">{app.location || '—'}</div>
                   <div className="text-xs text-gray-400">{app.locationType}</div>
                 </td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{app.appliedDate || '—'}</td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{app.lastUpdated}</td>
-                <td className="px-4 py-3 text-gray-500 text-xs">
+                <td className="hidden sm:table-cell px-4 py-3 text-gray-500 text-xs">{app.appliedDate || '—'}</td>
+                <td className="hidden lg:table-cell px-4 py-3 text-gray-500 text-xs">{app.lastUpdated}</td>
+                <td className="hidden lg:table-cell px-4 py-3 text-gray-500 text-xs">
                   {app.salaryMin || app.salaryMax
                     ? `${app.salaryMin}${app.salaryMin && app.salaryMax ? ' – ' : ''}${app.salaryMax}`
                     : '—'}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => onEdit(app)}
                       className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
@@ -109,12 +109,12 @@ export function TableView({ applications, sortField, sortDir, onSort, onEdit, on
   )
 }
 
-function SortHeader({ label, field, current, dir, onSort }: {
-  label: string; field: SortField; current: SortField; dir: SortDirection; onSort: (f: SortField) => void
+function SortHeader({ label, field, current, dir, onSort, className = '' }: {
+  label: string; field: SortField; current: SortField; dir: SortDirection; onSort: (f: SortField) => void; className?: string
 }) {
   const active = current === field
   return (
-    <th className="px-4 py-3 text-left">
+    <th className={`px-4 py-3 text-left ${className}`}>
       <button onClick={() => onSort(field)}
         className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-800 transition-colors">
         {label}

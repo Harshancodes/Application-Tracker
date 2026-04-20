@@ -16,7 +16,7 @@ export function KanbanView({ applications, onEdit, onDelete }: Props) {
       {COLUMNS.map(status => {
         const cards = applications.filter(a => a.status === status)
         return (
-          <div key={status} className="flex-shrink-0 w-64">
+          <div key={status} className="flex-shrink-0 w-56 sm:w-64">
             <div className="flex items-center gap-2 mb-3 px-1">
               <div className={`w-2.5 h-2.5 rounded-full ${getStatusDotColor(status)}`} />
               <span className="text-sm font-semibold text-gray-700">{status}</span>
@@ -80,7 +80,7 @@ function KanbanCard({ app, onEdit, onDelete }: { app: Application; onEdit: (a: A
 
       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
         <span className="text-xs text-gray-400">{app.appliedDate || 'No date'}</span>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {app.jobUrl && (
             <a href={app.jobUrl} target="_blank" rel="noopener noreferrer"
               className="p-1 text-gray-400 hover:text-blue-500 rounded transition-colors">
