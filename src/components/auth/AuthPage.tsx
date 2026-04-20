@@ -9,18 +9,21 @@ export function AuthPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const { login, register } = useAuth()
 
   const set = (key: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }))
     setError('')
+    setSuccess('')
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     if (mode === 'register') {
       if (form.password !== form.confirmPassword) {
@@ -38,10 +41,15 @@ export function AuthPage() {
         setLoading(false)
         return
       }
-      const result = register(form.username.trim(), form.email, form.password)
-      if (!result.success) setError(result.error ?? 'Registration failed')
+      const result = await register(form.username.trim(), form.email, form.password)
+      if (!result.success) {
+        setError(result.error ?? 'Registration failed')
+      } else {
+        setSuccess('Account created! Check your email to confirm, then sign in.')
+        switchMode('login')
+      }
     } else {
-      const result = login(form.username, form.password)
+      const result = await login(form.email, form.password)
       if (!result.success) setError(result.error ?? 'Login failed')
     }
     setLoading(false)
@@ -50,6 +58,7 @@ export function AuthPage() {
   const switchMode = (newMode: Mode) => {
     setMode(newMode)
     setError('')
+    setSuccess('')
     setForm({ username: '', email: '', password: '', confirmPassword: '' })
     setShowPassword(false)
   }
@@ -62,7 +71,6 @@ export function AuthPage() {
           <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/5 rounded-full" />
           <div className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] bg-white/5 rounded-full" />
           <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/5 rounded-full" />
-          {/* Grid pattern */}
           <div className="absolute inset-0 opacity-10"
             style={{
               backgroundImage: 'linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)',
@@ -81,7 +89,7 @@ export function AuthPage() {
           <div className="mb-3">
             <div className="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 mb-6">
               <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
-              <span className="text-xs text-indigo-200 font-medium">Free · No signup required to try</span>
+              <span className="text-xs text-indigo-200 font-medium">Free · Syncs across all your devices</span>
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
@@ -110,7 +118,6 @@ export function AuthPage() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-[400px]">
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-lg flex items-center justify-center">
               <Briefcase className="w-4 h-4 text-white" />
@@ -119,7 +126,6 @@ export function AuthPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-            {/* Tab toggle */}
             <div className="flex border-b border-slate-100">
               <button
                 onClick={() => switchMode('login')}
@@ -152,36 +158,36 @@ export function AuthPage() {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    {mode === 'login' ? 'Username or Email' : 'Username'}
-                  </label>
-                  <input
-                    required
-                    value={form.username}
-                    onChange={e => set('username', e.target.value)}
-                    className="auth-input"
-                    placeholder={mode === 'login' ? 'johndoe or john@email.com' : 'Choose a username'}
-                    autoComplete={mode === 'login' ? 'username' : 'username'}
-                  />
-                </div>
-
                 {mode === 'register' && (
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                      Email
+                      Username
                     </label>
                     <input
                       required
-                      type="email"
-                      value={form.email}
-                      onChange={e => set('email', e.target.value)}
+                      value={form.username}
+                      onChange={e => set('username', e.target.value)}
                       className="auth-input"
-                      placeholder="you@example.com"
-                      autoComplete="email"
+                      placeholder="Choose a username"
+                      autoComplete="username"
                     />
                   </div>
                 )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Email
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={e => set('email', e.target.value)}
+                    className="auth-input"
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -230,19 +236,32 @@ export function AuthPage() {
                   </div>
                 )}
 
+                {success && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 rounded-lg flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>{success}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold rounded-xl transition-all shadow-md shadow-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2">
-                  {mode === 'login' ? 'Sign In' : 'Create Account'}
-                  <ArrowRight className="w-4 h-4" />
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      {mode === 'login' ? 'Sign In' : 'Create Account'}
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>
           </div>
 
           <p className="text-center text-xs text-slate-400 mt-5">
-            Your data is stored locally in this browser · No server · No tracking
+            Your data syncs securely across all your devices
           </p>
         </div>
       </div>

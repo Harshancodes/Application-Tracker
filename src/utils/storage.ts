@@ -1,24 +1,5 @@
 import { Application } from '../types'
 
-const KEY_PREFIX = 'job_applications'
-
-function storageKey(userId?: string): string {
-  return userId ? `${KEY_PREFIX}_${userId}` : KEY_PREFIX
-}
-
-export function loadApplications(userId?: string): Application[] {
-  try {
-    const raw = localStorage.getItem(storageKey(userId))
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-export function saveApplications(apps: Application[], userId?: string): void {
-  localStorage.setItem(storageKey(userId), JSON.stringify(apps))
-}
-
 export function exportToCSV(apps: Application[]): void {
   const headers = [
     'Company', 'Role', 'Status', 'Likelihood', 'Applied Date',

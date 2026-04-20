@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Application, ViewMode } from './types'
+import { WatchlistEntry } from './types/watchlist'
 import { useApplications } from './hooks/useApplications'
+import { useWatchlist } from './hooks/useWatchlist'
 import { useAuth } from './context/AuthContext'
 import { AuthPage } from './components/auth/AuthPage'
 import { Dashboard } from './components/Dashboard'
@@ -8,14 +10,23 @@ import { TableView } from './components/TableView'
 import { KanbanView } from './components/KanbanView'
 import { ApplicationForm } from './components/ApplicationForm'
 import { FiltersBar } from './components/Filters'
+import { WatchlistView } from './components/watchlist/WatchlistView'
 import { exportToCSV } from './utils/storage'
 import {
   LayoutList, Kanban, Plus, Download, Briefcase,
-  LogOut, ChevronDown, BarChart2,
+  LogOut, ChevronDown, BarChart2, Bookmark,
 } from 'lucide-react'
 
 export default function App() {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!user) return <AuthPage />
 
@@ -37,10 +48,16 @@ function AuthenticatedApp({
     addApplication, updateApplication, deleteApplication,
   } = useApplications(userId)
 
+  const {
+    entries, filtered: filteredWatchlist, filters: watchlistFilters,
+    setFilters: setWatchlistFilters, loading: watchlistLoading,
+    addEntry, updateEntry, deleteEntry,
+  } = useWatchlist(userId)
+
   const [view, setView] = useState<ViewMode>('table')
   const [showForm, setShowForm] = useState(false)
   const [editingApp, setEditingApp] = useState<Application | null>(null)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'applications'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'applications' | 'watchlist'>('dashboard')
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const handleEdit = (app: Application) => {
@@ -59,6 +76,32 @@ function AuthenticatedApp({
       addApplication(data)
     }
     setEditingApp(null)
+  }
+
+  const handleConvertToApplication = async (entry: WatchlistEntry) => {
+    const newApp = await addApplication({
+      company: entry.company,
+      role: entry.roleInterested || '',
+      status: 'Applied',
+      likelihood: entry.priority,
+      appliedDate: new Date().toISOString().split('T')[0],
+      jobUrl: entry.careersUrl,
+      salaryMin: '',
+      salaryMax: '',
+      location: '',
+      locationType: 'Remote',
+      source: 'Company Website',
+      recruiterName: '',
+      recruiterEmail: '',
+      followUpDate: '',
+      interviewRounds: [],
+      notes: entry.notes,
+      tags: [],
+    })
+    if (newApp) {
+      await updateEntry(entry.id, { linkedApplicationId: newApp.id, status: 'Applied' })
+      setActiveTab('applications')
+    }
   }
 
   const handleCloseForm = () => {
@@ -137,20 +180,25 @@ function AuthenticatedApp({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Tabs */}
         <div className="flex items-center gap-0.5 mb-6 border-b border-slate-200">
-          <TabBtn
-            active={activeTab === 'dashboard'}
-            onClick={() => setActiveTab('dashboard')}
+          <TabBtn active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')}
             icon={<BarChart2 className="w-4 h-4" />}>
             Dashboard
           </TabBtn>
-          <TabBtn
-            active={activeTab === 'applications'}
-            onClick={() => setActiveTab('applications')}
+          <TabBtn active={activeTab === 'applications'} onClick={() => setActiveTab('applications')}
             icon={<Briefcase className="w-4 h-4" />}>
             Applications
             {applications.length > 0 && (
               <span className="ml-1.5 text-xs font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
                 {applications.length}
+              </span>
+            )}
+          </TabBtn>
+          <TabBtn active={activeTab === 'watchlist'} onClick={() => setActiveTab('watchlist')}
+            icon={<Bookmark className="w-4 h-4" />}>
+            Watchlist
+            {entries.length > 0 && (
+              <span className="ml-1.5 text-xs font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">
+                {entries.length}
               </span>
             )}
           </TabBtn>
@@ -161,12 +209,9 @@ function AuthenticatedApp({
         {activeTab === 'applications' && (
           <div className="space-y-4">
             <FiltersBar filters={filters} onChange={setFilters} />
-
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-500">
-                Showing{' '}
-                <span className="font-semibold text-slate-700">{filtered.length}</span> of{' '}
-                {applications.length} applications
+                Showing <span className="font-semibold text-slate-700">{filtered.length}</span> of {applications.length} applications
               </p>
               <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
                 <ViewToggle active={view === 'table'} onClick={() => setView('table')}>
@@ -177,20 +222,27 @@ function AuthenticatedApp({
                 </ViewToggle>
               </div>
             </div>
-
             {view === 'table' ? (
-              <TableView
-                applications={filtered}
-                sortField={sortField}
-                sortDir={sortDir}
-                onSort={handleSort}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
+              <TableView applications={filtered} sortField={sortField} sortDir={sortDir}
+                onSort={handleSort} onEdit={handleEdit} onDelete={handleDelete} />
             ) : (
               <KanbanView applications={filtered} onEdit={handleEdit} onDelete={handleDelete} />
             )}
           </div>
+        )}
+
+        {activeTab === 'watchlist' && (
+          <WatchlistView
+            entries={entries}
+            filtered={filteredWatchlist}
+            filters={watchlistFilters}
+            setFilters={setWatchlistFilters}
+            loading={watchlistLoading}
+            onAdd={addEntry}
+            onEdit={updateEntry}
+            onDelete={deleteEntry}
+            onConvertToApplication={handleConvertToApplication}
+          />
         )}
       </main>
 
@@ -205,21 +257,13 @@ function AuthenticatedApp({
   )
 }
 
-function TabBtn({
-  active, onClick, icon, children,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  children: React.ReactNode
+function TabBtn({ active, onClick, icon, children }: {
+  active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode
 }) {
   return (
-    <button
-      onClick={onClick}
+    <button onClick={onClick}
       className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px ${
-        active
-          ? 'border-indigo-600 text-indigo-600'
-          : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+        active ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
       }`}>
       {icon}
       {children}
@@ -227,16 +271,11 @@ function TabBtn({
   )
 }
 
-function ViewToggle({
-  active, onClick, children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
+function ViewToggle({ active, onClick, children }: {
+  active: boolean; onClick: () => void; children: React.ReactNode
 }) {
   return (
-    <button
-      onClick={onClick}
+    <button onClick={onClick}
       className={`p-1.5 rounded-md transition-colors ${
         active ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
       }`}>

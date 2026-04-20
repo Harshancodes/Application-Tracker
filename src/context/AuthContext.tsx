@@ -1,43 +1,70 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { User } from '../types/auth'
-import {
-  getCurrentUser,
-  login as authLogin,
-  register as authRegister,
-  logout as authLogout,
-} from '../utils/auth'
+import { supabase } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
-  login: (usernameOrEmail: string, password: string) => { success: boolean; error?: string }
-  register: (username: string, email: string, password: string) => { success: boolean; error?: string }
-  logout: () => void
+  loading: boolean
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  register: (username: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => getCurrentUser())
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const login = useCallback((usernameOrEmail: string, password: string) => {
-    const result = authLogin(usernameOrEmail, password)
-    if (result.success && result.user) setUser(result.user)
-    return { success: result.success, error: result.error }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email ?? '',
+          username: session.user.user_metadata?.username ?? session.user.email ?? '',
+        })
+      }
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email ?? '',
+          username: session.user.user_metadata?.username ?? session.user.email ?? '',
+        })
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const register = useCallback((username: string, email: string, password: string) => {
-    const result = authRegister(username, email, password)
-    if (result.success && result.user) setUser(result.user)
-    return { success: result.success, error: result.error }
+  const login = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
   }, [])
 
-  const logout = useCallback(() => {
-    authLogout()
-    setUser(null)
+  const register = useCallback(async (username: string, email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  }, [])
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
